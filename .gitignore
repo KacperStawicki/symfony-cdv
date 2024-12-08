@@ -1,0 +1,43 @@
+# Ignore directories created by composer
+/vendor/
+/bin/
+/var/
+!var/.gitignore
+
+# Ignore logs and temporary files
+*.log
+*.cache
+*.phpunit.result.cache
+.phpunit.result.cache
+/.env
+/.env.*.local
+
+# Ignore cache and session files
+/var/cache/*
+/var/sessions/*
+!var/cache/.gitkeep
+!var/sessions/.gitkeep
+
+# Ignore IDE and editor configuration files
+/.idea/
+/*.iml
+/.vscode/
+*.swp
+*.swo
+*.swn
+*.swn
+*.bak
+*~
+
+# Ignore node_modules for front-end dependencies
+/node_modules/
+/yarn.lock
+/pnpm-lock.yaml
+
+# Ignore build output
+/public/build/
+/public/uploads/*
+!public/uploads/.gitkeep
+
+# Ignore environment-specific config
+/.env.local.php
