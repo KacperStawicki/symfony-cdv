@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Blog Articles{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1>Blog Articles</h1>
+        
+        {% if articles is defined and articles|length > 0 %}
+            {% for article in articles %}
+                <article class="mb-4">
+                    <h2>{{ article.title }}</h2>
+                    <p>{{ article.content }}</p>
+                </article>
+            {% endfor %}
+        {% else %}
+            <p>No articles found.</p>
+        {% endif %}
+    </div>
+{% endblock %} 
