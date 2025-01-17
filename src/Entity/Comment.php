@@ -2,46 +2,35 @@
 
 namespace App\Entity;
 
-use App\Repository\ArticlesRepository;
+use App\Repository\CommentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ArticlesRepository::class)]
-class Articles
+#[ORM\Entity(repositoryClass: CommentRepository::class)]
+class Comment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 100)]
-    private ?string $title = null;
-
-    #[ORM\Column(length: 10000)]
+    #[ORM\Column(type: Types::TEXT)]
     private ?string $content = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $Created = null;
+    private ?\DateTimeInterface $createdAt = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $author = null;
 
+    #[ORM\ManyToOne(targetEntity: Articles::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Articles $article = null;
+
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getTitle(): ?string
-    {
-        return $this->title;
-    }
-
-    public function setTitle(string $title): static
-    {
-        $this->title = $title;
-
-        return $this;
     }
 
     public function getContent(): ?string
@@ -56,14 +45,14 @@ class Articles
         return $this;
     }
 
-    public function getCreated(): ?\DateTimeInterface
+    public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->Created;
+        return $this->createdAt;
     }
 
-    public function setCreated(\DateTimeInterface $Created): static
+    public function setCreatedAt(\DateTimeInterface $createdAt): static
     {
-        $this->Created = $Created;
+        $this->createdAt = $createdAt;
 
         return $this;
     }
@@ -76,6 +65,18 @@ class Articles
     public function setAuthor(?User $author): static
     {
         $this->author = $author;
+
+        return $this;
+    }
+
+    public function getArticle(): ?Articles
+    {
+        return $this->article;
+    }
+
+    public function setArticle(?Articles $article): static
+    {
+        $this->article = $article;
 
         return $this;
     }

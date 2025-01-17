@@ -3,24 +3,94 @@
 namespace App\DataFixtures;
 
 use App\Entity\Articles;
+use App\Entity\Comment;
+use App\Entity\Reaction;
+use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    public function __construct(
+        private readonly UserPasswordHasherInterface $passwordHasher
+    ) {}
+
     public function load(ObjectManager $manager): void
     {
-        $article = new Articles();
-        $article->setTitle('First Article');
-        $article->setContent(' Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis et nunc vel velit congue vehicula nec et nunc. Nunc vestibulum justo sed augue fringilla, vel condimentum eros tempor. Nam sed venenatis nulla. Cras tortor massa, sodales in metus mollis, posuere tincidunt enim. Praesent malesuada rutrum elit, quis accumsan mi interdum ut. Cras gravida mollis diam, ut interdum eros elementum non. Cras bibendum enim dui, non accumsan dolor hendrerit non. In tincidunt, enim non scelerisque aliquam, ligula augue dapibus velit, ut semper eros massa et neque. Mauris tristique mi ut velit tincidunt, ac auctor turpis finibus. Aliquam eu neque non lacus euismod iaculis sed ac metus. Duis sagittis sem urna. Ut ut dictum tortor. Aliquam aliquet pharetra sem id semper. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Donec sodales ex sit amet vestibulum ultricies. Aenean in consectetur sem. Pellentesque faucibus dignissim velit et hendrerit. Donec consectetur porttitor purus nec accumsan. Maecenas mattis urna non suscipit mattis. Nullam feugiat tortor erat, nec varius leo imperdiet ut. Aenean porta lorem et lacus blandit blandit. Etiam felis turpis, pharetra sagittis nisl vitae, luctus rutrum turpis. Vivamus eget varius lorem, id facilisis ex. ');
+        // Create users
+        $admin = new User();
+        $admin->setEmail('admin@example.com');
+        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
+        $admin->setRoles(['ROLE_ADMIN']);
+        $manager->persist($admin);
 
-        $manager->persist($article);
+        $users = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $user = new User();
+            $user->setEmail("user{$i}@example.com");
+            $user->setPassword($this->passwordHasher->hashPassword($user, 'user123'));
+            $manager->persist($user);
+            $users[] = $user;
+        }
 
-        $article = new Articles();
-        $article->setTitle('Second Article');
-        $article->setContent(' Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis et nunc vel velit congue vehicula nec et nunc. Nunc vestibulum justo sed augue fringilla, vel condimentum eros tempor. Nam sed venenatis nulla. Cras tortor massa, sodales in metus mollis, posuere tincidunt enim. Praesent malesuada rutrum elit, quis accumsan mi interdum ut. Cras gravida mollis diam, ut interdum eros elementum non. Cras bibendum enim dui, non accumsan dolor hendrerit non. In tincidunt, enim non scelerisque aliquam, ligula augue dapibus velit, ut semper eros massa et neque. Mauris tristique mi ut velit tincidunt, ac auctor turpis finibus. Aliquam eu neque non lacus euismod iaculis sed ac metus. Duis sagittis sem urna. Ut ut dictum tortor. Aliquam aliquet pharetra sem id semper. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Donec sodales ex sit amet vestibulum ultricies. Aenean in consectetur sem. Pellentesque faucibus dignissim velit et hendrerit. Donec consectetur porttitor purus nec accumsan. Maecenas mattis urna non suscipit mattis. Nullam feugiat tortor erat, nec varius leo imperdiet ut. Aenean porta lorem et lacus blandit blandit. Etiam felis turpis, pharetra sagittis nisl vitae, luctus rutrum turpis. Vivamus eget varius lorem, id facilisis ex. ');
+        // Create articles
+        $articles = [];
+        $articleContents = [
+            'Introduction to Programming' => 'Programming is the process of creating a set of instructions that tell a computer how to perform a task. Programming can be done using a variety of computer programming languages...',
+            'Web Development Basics' => 'Web development is the work involved in developing a website for the Internet or an intranet. Web development can range from developing a simple single static page of plain text to complex web applications...',
+            'Database Design' => 'Database design is the organization of data according to a database model. The designer determines what data must be stored and how the data elements interrelate...',
+            'API Development' => 'API development involves creating application programming interfaces that define the ways different software components should interact...',
+            'Software Testing' => 'Software testing is the process of evaluating and verifying that a software product or application does what it is supposed to do...'
+        ];
 
-        $manager->persist($article);
+        foreach ($articleContents as $title => $content) {
+            $article = new Articles();
+            $article->setTitle($title);
+            $article->setContent($content);
+            $article->setCreated(new \DateTime());
+            $article->setAuthor($users[array_rand($users)]); // Random user as author
+            $manager->persist($article);
+            $articles[] = $article;
+        }
+
+        // Create comments
+        $commentContents = [
+            'Great article! Very informative.',
+            'This helped me understand the topic better.',
+            'Could you elaborate more on the second point?',
+            'Looking forward to more articles like this!',
+            'Very well explained, thanks for sharing.',
+            'I have a question about the implementation...',
+            'This is exactly what I was looking for.',
+            'Interesting perspective on the topic.'
+        ];
+
+        foreach ($articles as $article) {
+            // Add 2-4 random comments to each article
+            $numComments = rand(2, 4);
+            for ($i = 0; $i < $numComments; $i++) {
+                $comment = new Comment();
+                $comment->setContent($commentContents[array_rand($commentContents)]);
+                $comment->setCreatedAt(new \DateTime());
+                $comment->setArticle($article);
+                $comment->setAuthor($users[array_rand($users)]);
+                $manager->persist($comment);
+            }
+
+            // Add reactions
+            foreach ($users as $user) {
+                // 70% chance to add a reaction
+                if (rand(1, 100) <= 70) {
+                    $reaction = new Reaction();
+                    $reaction->setType(rand(0, 1) === 0 ? Reaction::LIKE : Reaction::DISLIKE);
+                    $reaction->setCreatedAt(new \DateTime());
+                    $reaction->setArticle($article);
+                    $reaction->setUser($user);
+                    $manager->persist($reaction);
+                }
+            }
+        }
 
         $manager->flush();
     }
